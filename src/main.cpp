@@ -427,8 +427,8 @@ void loop()
 		if (input >= reflowProfiles[selectedProfile].soakStartTemperature) {
 			// Set PID parameters for soaking ramp
 			reflowOvenPID.SetTunings(PID_KP_SOAK, PID_KI_SOAK, PID_KD_SOAK);
-			// Chop soaking period into smaller sub-period
-			timerSoak = now + reflowProfiles[selectedProfile].soakMicroPeriod * 1000u;
+			// Start soak timer
+			timerSoak = now;
 			// Ramp up to first section of soaking temperature
 			setpoint = reflowProfiles[selectedProfile].soakStartTemperature + SOAK_TEMPERATURE_STEP;
 			// Proceed to soaking state
@@ -438,11 +438,12 @@ void loop()
 		break;
 
 	case REFLOW_STATE_SOAK:
-		// If micro soak temperature is achieved
+		// Chop soaking period into smaller sub-period
 		if ((now - timerSoak) >= reflowProfiles[selectedProfile].soakMicroPeriod * 1000u) {
 			timerSoak = now;
 			// Increment micro setpoint
 			setpoint += SOAK_TEMPERATURE_STEP;
+			// Soaking is finished, start the real reflow !
 			if (setpoint > reflowProfiles[selectedProfile].soakEndTemperature) {
 				// Set agressive PID parameters for reflow ramp
 				reflowOvenPID.SetTunings(PID_KP_REFLOW, PID_KI_REFLOW, PID_KD_REFLOW);
